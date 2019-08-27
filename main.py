@@ -47,13 +47,8 @@ class IfcParse(object):
         self.ifc_filename = ifc_filename
         self.ifcfile = ifcopenshell.open(self.ifc_filename)
         self.project = self.ifcfile.by_type("IfcProject")[0]
-        self.metaObjects = []
-
-    def calculate(self):
         self.metaModel = MetaModel(id=self.project.Name, project_id=self.project.GlobalId, type=self.project.is_a())
-        metaObjects = self.extractHierarchy(self.project)
-        self.metaModel.meta_objects = metaObjects
-        return self.metaModel
+        self.metaObjects = []
 
     def extractHierarchy(self, objectDefinition):
 
@@ -70,7 +65,7 @@ class IfcParse(object):
                 for rE in cE.RelatedElements:
                     mo = MetaObject(id=rE.GlobalId, name=rE.Name,
                                     type=rE.is_a(), parent=element.GlobalId)
-                    self.metaObjects.append(mo)
+                    self.metaObjects.append(mo.__dict__)
 
         # if hasattr(objectDefinition, 'IsDecomposedBy'):
         #     relatedObjects = objectDefinition.IsDecomposedBy
@@ -82,10 +77,11 @@ class IfcParse(object):
         return list(self.metaObjects)
 
     def toJson(self):
+        metaObjects = self.extractHierarchy(self.project)
+        self.metaModel.meta_objects = metaObjects
         f = open('metaModel.json', 'w')
-        stored_info = jsonpickle.encode(self.metaModel)
+        stored_info = jsonpickle.encode(self.metaModel.__dict__)
         f.write(stored_info)
-
         return self.metaModel
 
 
