@@ -1,4 +1,4 @@
 *.DStore
-idea/
+.idea/
 venv/
 
