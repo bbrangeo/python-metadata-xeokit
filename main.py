@@ -1,7 +1,7 @@
 # coding: utf8
-
+import json
 import platform
-from pprint import pprint
+import jsonpickle
 
 if platform.system() == 'Linux':
     import ifcopenshell as ifcopenshell
@@ -66,10 +66,6 @@ class IfcParse(object):
         spatialElement = self.ifcfile.by_type("IfcSpatialStructureElement")
 
         for element in spatialElement:
-
-            a = element.get_info(recursive=False)
-            # pprint(a)
-            # pprint(a.keys())
             for cE in element.ContainsElements:
                 for rE in cE.RelatedElements:
                     mo = MetaObject(id=rE.GlobalId, name=rE.Name,
@@ -85,9 +81,10 @@ class IfcParse(object):
 
         return list(self.metaObjects)
 
-
-    def response(self):
-        result = self.calculate()
+    def toJson(self):
+        f = open('metaModel.json', 'w')
+        stored_info = jsonpickle.encode(self.metaModel)
+        f.write(stored_info)
 
         return self.metaModel
 
@@ -97,14 +94,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Process')
     parser.add_argument('--ifc_filename', metavar='ifc', help='ifc_filename')
-    # parser.add_argument('--entities', metavar='entities', help='entities', nargs='+')
 
     args = parser.parse_args()
     ifc_filename = args.ifc_filename
-    # entities = args.entities
 
-    # #print(ifc_filename)
     projet = IfcParse(ifc_filename=ifc_filename)
-    # pprint(len(projet.response().meta_objects))
-    pprint(projet.response())
-
+    projet.toJson()
