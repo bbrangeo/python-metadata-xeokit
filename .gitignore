@@ -1,3 +1,4 @@
 *.DStore
 idea/
+venv/
 
