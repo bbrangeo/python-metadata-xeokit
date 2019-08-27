@@ -6,7 +6,7 @@
 ## Usage
 
 ```
-$ python main.py --ifc_filename MAISON_EP_0.ifc
+$ python main.py --ifc_input MAISON_EP_0.ifc --json_output metaModel.json
 ```
 
 ## JSON

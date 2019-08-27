@@ -34,13 +34,13 @@ class IfcParse(object):
     classdocs
     """
 
-    def __init__(self, ifc_filename):
+    def __init__(self, ifc_input_):
         """
         Constructor
         """
 
-        self.ifc_filename = ifc_filename
-        self.ifcfile = ifcopenshell.open(self.ifc_filename)
+        self.ifc_input = ifc_input_
+        self.ifcfile = ifcopenshell.open(self.ifc_input)
         self.project = self.ifcfile.by_type("IfcProject")[0]
         self.metaModel = MetaModel(id=self.project.Name, project_id=self.project.GlobalId, type=self.project.is_a())
         self.metaObjects = []
@@ -71,10 +71,10 @@ class IfcParse(object):
 
         return list(self.metaObjects)
 
-    def to_json(self):
+    def to_json(self, json_output_):
         metaObjects = self.extract_hierarchy(self.project)
         self.metaModel.meta_objects = metaObjects
-        f = open('metaModel.json', 'w')
+        f = open(json_output_, 'w')
         stored_info = jsonpickle.encode(self.metaModel.__dict__)
         f.write(stored_info)
         return self.metaModel
@@ -84,10 +84,12 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Process')
-    parser.add_argument('--ifc_filename', metavar='ifc', help='ifc_filename')
+    parser.add_argument('--ifc_input', metavar='ifc', help='ifc_input')
+    parser.add_argument('--json_output', metavar='json', help='json_filename', default='metaModel.json')
 
     args = parser.parse_args()
-    ifc_filename = args.ifc_filename
+    ifc_input = args.ifc_input
+    json_output = args.json_output
 
-    projet = IfcParse(ifc_filename=ifc_filename)
-    projet.to_json()
+    projet = IfcParse(ifc_input)
+    projet.to_json(json_output)
