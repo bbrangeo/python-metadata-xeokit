@@ -1,12 +1,6 @@
 # coding: utf8
-import platform
-
+import ifcopenshell as ifcopenshell
 import jsonpickle
-
-if platform.system() == 'Linux':
-    import ifcopenshell as ifcopenshell
-else:
-    import ifcopenshell as ifcopenshell
 
 
 class MetaModel(object):
