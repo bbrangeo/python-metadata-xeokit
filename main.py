@@ -1,7 +1,8 @@
 # coding: utf8
-import json
+from pprint import pprint
 
 import ifcopenshell as ifcopenshell
+import simplejson as json
 
 
 class MetaModel(object):
@@ -45,37 +46,44 @@ class IfcParse(object):
         self.ifc_input = ifc_input_
         self.ifcfile = ifcopenshell.open(self.ifc_input)
         self.project = self.ifcfile.by_type("IfcProject")[0]
+        # pprint(self.project.get_info(recursive=True))
+        # pprint(self.project.BuildingAddress.AddressLines)
         self.metaModel = MetaModel(id=self.project.Name, project_id=self.project.GlobalId, type=self.project.is_a())
+        self.count = 0
 
     def extract_hierarchy(self, object_definition):
-
         metaObjectsList = []
-        parentObject = MetaObject(id=object_definition.GlobalId, name=object_definition.Name,
-                                  type=object_definition.is_a(), parent=None)
+
+        # parentObject = MetaObject(id=object_definition.GlobalId, name=object_definition.Name,
+        #                           type=object_definition.is_a(), parent=None)
+        parentObject = {'id': object_definition.GlobalId, 'name': object_definition.Name,
+                        'type': object_definition.is_a(), 'parent': None, "children": []}
 
         # if str(object_definition.is_a()) != "IfcProject":
-        metaObjectsList.append(parentObject.__dict__)
+        metaObjectsList.append(dict(parentObject))
 
         if object_definition.is_a("IfcSpatialStructureElement"):
             for cE in object_definition.ContainsElements:
                 for rE in cE.RelatedElements:
-                    mo = MetaObject(id=rE.GlobalId, name=rE.Name,
-                                    type=rE.is_a(), parent=object_definition.GlobalId)
-                    metaObjectsList.append(mo.__dict__)
+                    # mo = MetaObject(id=rE.GlobalId, name=rE.Name,
+                    #                 type=rE.is_a(), parent=object_definition.GlobalId)
+                    mo = {'id': rE.GlobalId, 'name': rE.Name,
+                          'type': rE.is_a(), 'parent': object_definition.GlobalId, "children": []}
+                    metaObjectsList.append(dict(mo))
 
         for iD in object_definition.IsDecomposedBy:
             for rO in iD.RelatedObjects:
                 childrens = self.extract_hierarchy(rO)
-                metaObjectsList.append(childrens)
-                # pprint(item.get_info(recursive=True))
+                metaObjectsList.extend(list(childrens))
 
         return metaObjectsList
 
     def to_json(self, json_output_):
         metaObjects = self.extract_hierarchy(self.project)
-        self.metaModel.meta_objects = metaObjects
+        self.metaModel.metaObjects = metaObjects
+        pprint(metaObjects)
         f = open(json_output_, 'w')
-        json_data = json.dumps(self.metaModel.__dict__, default=lambda o: o.__dict__, indent=4)
+        json_data = json.dumps(self.metaModel.__dict__, default=lambda o: o.__dict__, indent=1)
         f.write(json_data)
         return self.metaModel
 
